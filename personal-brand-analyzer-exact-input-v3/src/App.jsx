@@ -4,7 +4,7 @@ import logo from "./assets/vsi-orange-logo.jpg";
 import "./styles.css";
 
 const EMPTY_REPORT = {
-  input: { name: "No profile analyzed yet", linkedinUrl: "" },
+  input: { name: "No profile analyzed yet", linkedinUrl: "", company: "", title: "", location: "", hasPastedLinkedInText: false },
   identityVerification: {
     status: "Ready",
     confidence: 0,
@@ -149,6 +149,15 @@ function Report({ report }) {
         <div>
           <h2>Personal Brand Analyzer: {report.input?.name}</h2>
           {report.input?.linkedinUrl && <p><b>LinkedIn analyzed:</b> <a href={report.input.linkedinUrl} target="_blank" rel="noreferrer">{report.input.linkedinUrl}</a></p>}
+          {(report.input?.company || report.input?.title || report.input?.location || report.input?.hasPastedLinkedInText) && (
+            <p className="provided-identifiers">
+              <b>Extra identity anchors:</b>
+              {report.input?.title && <span>{report.input.title}</span>}
+              {report.input?.company && <span>{report.input.company}</span>}
+              {report.input?.location && <span>{report.input.location}</span>}
+              {report.input?.hasPastedLinkedInText && <span>LinkedIn text pasted</span>}
+            </p>
+          )}
         </div>
         <div className="confidence"><span>{iv.status || "Unknown"}</span><strong>{iv.confidence ?? 0}%</strong><small>identity confidence</small></div>
       </div>
@@ -174,6 +183,10 @@ function Report({ report }) {
 function App() {
   const [name, setName] = useState("");
   const [linkedinUrl, setLinkedinUrl] = useState("");
+  const [company, setCompany] = useState("");
+  const [title, setTitle] = useState("");
+  const [location, setLocation] = useState("");
+  const [linkedinText, setLinkedinText] = useState("");
   const [report, setReport] = useState(EMPTY_REPORT);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -188,7 +201,7 @@ function App() {
       const res = await fetch("/api/analyze", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, linkedinUrl })
+        body: JSON.stringify({ name, linkedinUrl, company, title, location, linkedinText })
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Analysis failed.");
@@ -211,16 +224,23 @@ function App() {
           </div>
           <div className="eyebrow">✦ Any Public Profile</div>
           <h1>See how any online personal brand is currently perceived.</h1>
-          <p className="sub">Enter any person’s name and LinkedIn URL. If public verification is limited, the app still returns a cautious partial report instead of stopping.</p>
-          <div className="trust"><span>🔎 Public research</span><span>📊 Dynamic scores</span><span>🧭 SWOT dashboard</span><span>🎯 Partial confidence report</span></div>
+          <p className="sub">Enter any person’s name and LinkedIn URL. For common names, add company, title, location, or pasted LinkedIn text to reduce wrong-person matches.</p>
+          <div className="trust"><span>🔎 Public research</span><span>📊 Dynamic scores</span><span>🧭 SWOT dashboard</span><span>🪪 Identity anchors</span></div>
         </div>
 
         <form className="card form" onSubmit={handleSubmit} autoComplete="off">
           <h2>Analyze any profile</h2>
-          <label><span>Full name</span><input value={name} onChange={e => setName(e.target.value)} placeholder="Enter full name" autoComplete="off" name="person_full_name" /></label>
-          <label><span>LinkedIn URL</span><input value={linkedinUrl} onChange={e => setLinkedinUrl(e.target.value)} placeholder="https://www.linkedin.com/in/username/" autoComplete="off" name="person_linkedin_url" /></label>
+          <label><span>Full name *</span><input value={name} onChange={e => setName(e.target.value)} placeholder="Enter full name" autoComplete="off" name="person_full_name" /></label>
+          <label><span>LinkedIn URL *</span><input value={linkedinUrl} onChange={e => setLinkedinUrl(e.target.value)} placeholder="https://www.linkedin.com/in/username/" autoComplete="off" name="person_linkedin_url" /></label>
+          <div className="optional-note">Recommended for common names like Joe Smith:</div>
+          <div className="field-grid">
+            <label><span>Current company</span><input value={company} onChange={e => setCompany(e.target.value)} placeholder="Company name" autoComplete="off" name="person_company" /></label>
+            <label><span>Current title</span><input value={title} onChange={e => setTitle(e.target.value)} placeholder="Job title" autoComplete="off" name="person_title" /></label>
+          </div>
+          <label><span>Location</span><input value={location} onChange={e => setLocation(e.target.value)} placeholder="City, state/country" autoComplete="off" name="person_location" /></label>
+          <label><span>Optional: paste LinkedIn headline / About / Experience</span><textarea value={linkedinText} onChange={e => setLinkedinText(e.target.value)} placeholder="Paste public/profile text here to improve accuracy when LinkedIn cannot be read directly." autoComplete="off" name="person_linkedin_text" rows="5" /></label>
           <button disabled={!canSubmit || loading}>{loading ? "Analyzing public signals..." : "Analyze My Brand →"}</button>
-          <p className="hint">This works for any public LinkedIn profile. Reports are not published as public pages.</p>
+          <p className="hint">The LinkedIn URL is the identity anchor. Extra fields help avoid analyzing the wrong person when names are common.</p>
           {error && <div className="error">{error}</div>}
         </form>
       </section>
@@ -230,7 +250,7 @@ function App() {
       <footer>
         <div><b>Powered by Visual Storytelling Institute</b><a href="https://www.visualstorytell.com" target="_blank" rel="noreferrer">visualstorytell.com</a></div>
         <div><span>For more, subscribe to the Visual Storytelling Newsletter:</span><a href="https://newsletter.visualstorytell.com" target="_blank" rel="noreferrer">newsletter.visualstorytell.com</a></div>
-        <div className="version">v7 partial verification · any profile</div>
+        <div className="version">v8 stronger identity matching · any profile</div>
       </footer>
     </main>
   );

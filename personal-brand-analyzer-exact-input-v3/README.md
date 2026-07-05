@@ -1,18 +1,20 @@
-# Personal Brand Analyzer v7 — Partial Verification Fix
+# Personal Brand Analyzer v8 — Stronger Identity Matching
 
-This version fixes the issue where the app could stop with:
-"Unable to verify the identity..."
+This version reduces wrong-person matches for common names.
 
 ## What changed
 
-- LinkedIn being blocked or not indexed no longer causes a hard failure.
-- If verification is weak, the app returns a cautious "Partially verified" or "Not verified" report.
-- The analysis continues using available public signals.
-- Unsupported claims are marked as "Evidence not found in public signals."
-- Uses a safer two-step backend:
-  1. Web research without JSON mode.
-  2. JSON conversion without web search.
-- Footer shows: v7 partial verification · any profile.
+- Adds optional identity fields:
+  - Current company
+  - Current title
+  - Location
+  - Pasted LinkedIn headline/About/Experience
+- Treats the LinkedIn URL as the primary identity anchor.
+- Does not analyze another person with the same name unless public evidence connects that person to the URL/slug/company/title/location/pasted text.
+- Common names require stronger matching.
+- Bans placeholder outputs such as XYZ Corporation, ABC Company, Example Company, Acme, John Doe, and Jane Doe.
+- If a fact is not verified, the app says: Evidence not found in public signals.
+- Footer shows: v8 stronger identity matching · any profile.
 
 ## Deploy
 

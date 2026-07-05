@@ -95,61 +95,88 @@ function getLinkedInSlug(linkedinUrl) {
   }
 }
 
-function buildResearchPrompt({ name, linkedinUrl }) {
+function compactLinkedInText(text) {
+  return cleanString(text).slice(0, 5000);
+}
+
+function buildResearchPrompt({ name, linkedinUrl, company, title, location, linkedinText }) {
   const slug = getLinkedInSlug(linkedinUrl);
+  const profileText = compactLinkedInText(linkedinText);
 
   return `
-You are a careful public-signal reputation researcher.
+You are a careful public-signal reputation researcher. Your top priority is avoiding wrong-person analysis.
 
-Research the public online signals for this user-submitted profile:
+Research this user-submitted profile:
 Name entered by user: ${name}
 LinkedIn URL entered by user: ${linkedinUrl}
 LinkedIn profile slug: ${slug}
+Optional current company entered by user: ${company || "not provided"}
+Optional current title entered by user: ${title || "not provided"}
+Optional location entered by user: ${location || "not provided"}
+Optional pasted LinkedIn headline/About/Experience text:
+${profileText || "not provided"}
 
-Important behavior:
-- LinkedIn profiles are often blocked, partially visible, or not indexed. Do NOT treat lack of LinkedIn page access as a complete failure.
-- Try to verify whether the entered name and LinkedIn URL likely refer to the same person using whatever public snippets, search results, the LinkedIn slug, public bios, websites, company pages, podcasts, articles, newsletters, speaker pages, and social profiles are available.
-- If exact verification is weak, mark identity as "Partially verified" or "Not verified", explain the limitation, but still continue the brand analysis from available public signals.
-- If no matching public sources are found, create a limited report that says "Evidence not found in public signals" for unsupported claims.
-- Do not say "Unable to verify identity" as the only result unless the LinkedIn URL is invalid or clearly belongs to a different person.
-- Do not fabricate roles, clients, testimonials, awards, case studies, or sources.
-- Do not include or require a headshot, generated face, avatar, or photo placeholder.
+Identity rules:
+- Treat the LinkedIn URL as the primary identity anchor.
+- Do not analyze a person with the same name unless public evidence connects that person to the provided LinkedIn URL, profile slug, company, title, location, or pasted LinkedIn text.
+- Common names require stronger matching. For a common name like Joe Smith, do not rely on name alone.
+- If multiple people match the name and none clearly match the URL/slug/company/title/location/pasted text, return "Not verified" and use only cautious, non-specific observations.
+- If provided company/title/location conflict with public signals, flag the conflict.
+- LinkedIn may be blocked, partially visible, or not indexed. Do not treat lack of LinkedIn access as a total failure, but lower confidence.
+- User-pasted LinkedIn text is first-party input, not independently verified public evidence. Use it for analysis but label it as user-provided.
+- Never fabricate roles, companies, clients, testimonials, awards, case studies, or sources.
+- Never use placeholder names or companies such as XYZ Corporation, ABC Company, Example Company, Acme, or "Senior Digital Marketing Manager at XYZ Corporation."
+- If a company, role, title, client, award, or source is not verified, write exactly: "Evidence not found in public signals."
+- No headshots, generated faces, avatars, or photo placeholders.
 - This app works for any public person/profile. Never use sample data or prior profile data.
 
 Search strategy:
 - Search the exact name in quotes.
 - Search the exact name plus LinkedIn slug.
-- Search the exact name plus likely company/title if found.
-- Search the LinkedIn slug alone if it resembles a name or handle.
+- Search the LinkedIn slug alone.
+- Search exact name plus provided company/title/location when provided.
+- Search distinctive phrases from pasted LinkedIn text when provided.
 - Look for source overlap: same name, same company, same bio, same website, same social handle, same content topics.
 
 Return concise research notes in plain English with:
 1. Identity verification status and confidence.
-2. Whether LinkedIn was directly readable or only indirectly inferred.
-3. Public sources found with URLs/domains.
-4. Current form signals: visual style, profile image style if visible, website/social aesthetics, colors, tone, imagery.
-5. Current function signals: specialty, role, audience, services, content topics, proof.
-6. Evidence strength and limitations.
-7. Likely audience perception.
-8. SWOT notes.
-9. Recommended metrics and scores.
+2. Direct identity matches found and missing.
+3. Whether LinkedIn was directly readable or only indirectly inferred.
+4. Public sources found with URLs/domains.
+5. Which details are user-provided vs independently verified.
+6. Current form signals: visual style, website/social aesthetics, tone, imagery.
+7. Current function signals: specialty, role, audience, services, content topics, proof.
+8. Evidence strength and limitations.
+9. Likely audience perception.
+10. SWOT notes.
+11. Recommended metrics and scores.
 `.trim();
 }
 
-function buildJsonPrompt({ name, linkedinUrl, researchNotes }) {
+function buildJsonPrompt({ name, linkedinUrl, company, title, location, linkedinText, researchNotes }) {
   return `
 Convert the research notes below into ONE valid JSON object that follows the exact schema.
 Do not include markdown. Do not include prose outside JSON.
 
-Use only the evidence in the research notes.
+Use only the evidence in the research notes and the exact user input.
 If evidence is weak or missing, keep the analysis useful but honest.
-If identity verification is weak, do NOT make confident claims. Use "Partially verified" or "Not verified", lower confidence, and explain the limitation.
+If identity verification is weak, use "Partially verified" or "Not verified", lower confidence, and explain the limitation.
 Do not output a hard failure message unless the LinkedIn URL is invalid or clearly mismatched.
 If public evidence is limited, still return all schema fields with "Evidence not found in public signals" where appropriate.
 
-Exact input:
+Hard anti-hallucination rules:
+- Do not invent company, role, title, client, award, publication, testimonial, or location.
+- Never use placeholders such as XYZ Corporation, ABC Company, Example Company, Acme, John Doe, Jane Doe, or "Senior Digital Marketing Manager at XYZ Corporation."
+- If a fact comes only from pasted LinkedIn text, say "User-provided LinkedIn text says..." rather than treating it as independently verified.
+- If multiple people match and identifiers are insufficient, state that clearly.
+
+Exact user input:
 Name: ${name}
 LinkedIn URL: ${linkedinUrl}
+Current company: ${company || "not provided"}
+Current title: ${title || "not provided"}
+Location: ${location || "not provided"}
+Pasted LinkedIn text provided: ${compactLinkedInText(linkedinText) ? "yes" : "no"}
 
 Research notes:
 ${researchNotes}
@@ -158,14 +185,18 @@ Required JSON schema:
 {
   "input": {
     "name": "exact entered name",
-    "linkedinUrl": "exact entered LinkedIn URL"
+    "linkedinUrl": "exact entered LinkedIn URL",
+    "company": "exact entered company or empty string",
+    "title": "exact entered title or empty string",
+    "location": "exact entered location or empty string",
+    "hasPastedLinkedInText": false
   },
   "identityVerification": {
     "status": "Verified | Partially verified | Not verified",
     "confidence": 0,
     "summary": "short explanation",
     "limitations": ["short limitation"],
-    "sourceNotes": ["source note with URL or domain when available"]
+    "sourceNotes": ["source note with URL/domain or user-provided LinkedIn text note"]
   },
   "summary": {
     "currentPersonalBrand": "one sentence",
@@ -191,7 +222,7 @@ Required JSON schema:
     "formSupportsFunction":"short"
   },
   "brandAttributes": [
-    {"attribute":"short","evidence":"specific public signal or limitation","signalType":"Form | Function | Both","strength":"Strong | Moderate | Weak","perception":"short"}
+    {"attribute":"short","evidence":"specific public signal, user-provided signal, or limitation","signalType":"Form | Function | Both","strength":"Strong | Moderate | Weak","perception":"short"}
   ],
   "functionAnalysis": {
     "apparentSpecialty":"short",
@@ -264,16 +295,28 @@ Requirements:
 `.trim();
 }
 
-function fallbackReport({ name, linkedinUrl, researchNotes }) {
+function replacePlaceholders(value) {
+  if (typeof value === "string") {
+    const banned = /(XYZ Corporation|ABC Company|Example Company|Acme|John Doe|Jane Doe|Senior Digital Marketing Manager at XYZ Corporation)/gi;
+    return value.replace(banned, "Evidence not found in public signals");
+  }
+  if (Array.isArray(value)) return value.map(replacePlaceholders);
+  if (value && typeof value === "object") {
+    for (const key of Object.keys(value)) value[key] = replacePlaceholders(value[key]);
+  }
+  return value;
+}
+
+function fallbackReport({ name, linkedinUrl, company, title, location, linkedinText, researchNotes }) {
   return {
-    input: { name, linkedinUrl },
+    input: { name, linkedinUrl, company, title, location, hasPastedLinkedInText: !!compactLinkedInText(linkedinText) },
     identityVerification: {
       status: "Partially verified",
       confidence: 35,
-      summary: "Public-source verification was limited, but the app generated a cautious partial report from available signals.",
+      summary: "Public-source verification was limited, so the app generated a cautious partial report from available signals and user-provided identifiers.",
       limitations: [
         "LinkedIn may not be publicly readable or indexed.",
-        "Public sources may be limited, stale, or ambiguous.",
+        "For common names, company, title, location, and pasted LinkedIn text improve matching.",
         researchNotes.slice(0, 800)
       ],
       sourceNotes: []
@@ -303,11 +346,11 @@ function fallbackReport({ name, linkedinUrl, researchNotes }) {
     },
     brandAttributes: [
       {
-        attribute: "Low public discoverability",
-        evidence: "The app could not find enough matching public signals for the entered name and LinkedIn URL.",
+        attribute: "Identity evidence limited",
+        evidence: "The app could not find enough matching public signals for the entered identifiers.",
         signalType: "Both",
         strength: "Weak",
-        perception: "A stranger may struggle to understand or verify the person’s brand quickly."
+        perception: "A stranger may struggle to verify this profile quickly."
       }
     ],
     functionAnalysis: {
@@ -332,7 +375,7 @@ function fallbackReport({ name, linkedinUrl, researchNotes }) {
       strengthen: ["Make public profile signals easier to verify."],
       simplify: ["Use one clear headline and one primary category."],
       remove: ["Remove ambiguity across profiles."],
-      repeat: ["Repeat the same name, title, and specialty across channels."]
+      repeat: ["Repeat the same name, title, company, and specialty across channels."]
     },
     positioningConsistency: {
       category: "Evidence not found in public signals.",
@@ -364,18 +407,18 @@ function fallbackReport({ name, linkedinUrl, researchNotes }) {
       }
     ],
     swot: {
-      strengths: ["Input provides a name and LinkedIn URL"],
+      strengths: ["User provided identity anchors"],
       weaknesses: ["Limited public evidence found"],
       opportunities: ["Improve public discoverability", "Unify profile signals"],
-      threats: ["Strangers may not quickly verify credibility"]
+      threats: ["Wrong-person confusion for common names"]
     },
     keyGaps: [
+      { label: "Identity verification", score: 8, severity: "High" },
       { label: "Public discoverability", score: 8, severity: "High" },
-      { label: "Identity verification", score: 7, severity: "High" },
       { label: "Proof visibility", score: 7, severity: "High" }
     ],
     priorityActions: [
-      { action: "Make profile easier to verify", supportingPhrase: "Consistent links" },
+      { action: "Add stronger identity anchors", supportingPhrase: "Company/title/location" },
       { action: "Clarify primary specialty", supportingPhrase: "One headline" },
       { action: "Add public proof", supportingPhrase: "Visible sources" }
     ],
@@ -391,6 +434,10 @@ export default async function handler(req, res) {
   const name = cleanString(req.body?.name);
   const rawLinkedInUrl = cleanString(req.body?.linkedinUrl);
   const linkedinUrl = normalizeLinkedInUrl(rawLinkedInUrl);
+  const company = cleanString(req.body?.company);
+  const title = cleanString(req.body?.title);
+  const location = cleanString(req.body?.location);
+  const linkedinText = compactLinkedInText(req.body?.linkedinText);
 
   if (!name || name.length < 2) {
     return res.status(400).json({ error: "Please enter a full name." });
@@ -407,12 +454,11 @@ export default async function handler(req, res) {
   const model = process.env.OPENAI_MODEL || "gpt-4.1-mini";
 
   try {
-    // Step 1: web research, no JSON mode.
     const researchData = await openaiResponses({
       apiKey: process.env.OPENAI_API_KEY,
       body: {
         model,
-        input: buildResearchPrompt({ name, linkedinUrl }),
+        input: buildResearchPrompt({ name, linkedinUrl, company, title, location, linkedinText }),
         tools: [{ type: "web_search" }],
         temperature: 0.2
       }
@@ -424,13 +470,11 @@ export default async function handler(req, res) {
       return res.status(502).json({ error: "No research notes returned. Please try again." });
     }
 
-    // Step 2: convert research to JSON, no web_search.
-    // JSON mode is allowed here because this call does not use web search.
     const jsonData = await openaiResponses({
       apiKey: process.env.OPENAI_API_KEY,
       body: {
         model,
-        input: buildJsonPrompt({ name, linkedinUrl, researchNotes }),
+        input: buildJsonPrompt({ name, linkedinUrl, company, title, location, linkedinText, researchNotes }),
         text: { format: { type: "json_object" } },
         temperature: 0.1
       }
@@ -440,10 +484,11 @@ export default async function handler(req, res) {
     let report = extractJson(outputText);
 
     if (!report) {
-      report = fallbackReport({ name, linkedinUrl, researchNotes });
+      report = fallbackReport({ name, linkedinUrl, company, title, location, linkedinText, researchNotes });
     }
 
-    report.input = { name, linkedinUrl };
+    report = replacePlaceholders(report);
+    report.input = { name, linkedinUrl, company, title, location, hasPastedLinkedInText: !!linkedinText };
 
     return res.status(200).json({ report });
   } catch (error) {
