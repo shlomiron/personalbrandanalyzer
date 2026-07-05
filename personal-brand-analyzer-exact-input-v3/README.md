@@ -31,3 +31,4 @@ Then redeploy.
 ## Important accuracy note
 
 No automated public web analysis can be guaranteed 100% accurate because public pages can be incomplete, blocked, stale, or ambiguous. This app now enforces exact input matching and source-aware confidence scoring.
+Updated deployment settings.
