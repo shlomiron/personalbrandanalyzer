@@ -1,34 +1,23 @@
-# Personal Brand Analyzer — Exact Input Vercel App
+# Personal Brand Analyzer v6 — Any Public Profile
 
-This version is designed to analyze the exact user-entered name and LinkedIn URL.
+This version removes visible sample-person placeholders and fixes the OpenAI web search + JSON mode error.
 
-## What changed
+## Fixes
 
-- No hardcoded Shlomi Ron live report.
-- The API prompt binds every report to the exact entered name and LinkedIn URL.
-- Identity verification appears first with status and confidence.
-- If the LinkedIn URL and public sources do not clearly match the name, the app must say so.
-- The app displays limitations instead of claiming 100% certainty.
-- Dashboard metrics, SWOT, gaps, actions, and report sections are generated dynamically.
-- Uses the orange VSI logo.
-- No headshot, avatar, generated face, or photo placeholder.
+- No visible sample person's name in the full-name field.
+- Full-name field placeholder is now: Enter full name.
+- Browser autocomplete is turned off for the form.
+- Backend no longer uses JSON mode.
+- Backend still uses web search.
+- Footer shows: v6 no JSON mode · any profile.
+- App is intended for any public person/profile with a name and LinkedIn URL.
 
-## Vercel setup
+## Vercel
 
-After deploying the ZIP, add this Environment Variable in Vercel:
+Keep the same project and same URL. Upload/commit these files to the connected GitHub repo, wait for Vercel to auto-deploy, then hard refresh.
 
-Name:
+Environment variable required:
 OPENAI_API_KEY
-
-Value:
-your OpenAI API key beginning with sk-...
 
 Optional:
 OPENAI_MODEL=gpt-4.1-mini
-
-Then redeploy.
-
-## Important accuracy note
-
-No automated public web analysis can be guaranteed 100% accurate because public pages can be incomplete, blocked, stale, or ambiguous. This app now enforces exact input matching and source-aware confidence scoring.
-Updated deployment settings.

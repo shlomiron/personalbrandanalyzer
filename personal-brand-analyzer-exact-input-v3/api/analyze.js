@@ -10,7 +10,8 @@ function isLikelyLinkedInProfile(url) {
   try {
     const parsed = new URL(url);
     const host = parsed.hostname.toLowerCase();
-    return (host === "linkedin.com" || host.endsWith(".linkedin.com")) && parsed.pathname.toLowerCase().startsWith("/in/");
+    return (host === "linkedin.com" || host.endsWith(".linkedin.com")) &&
+      parsed.pathname.toLowerCase().startsWith("/in/");
   } catch {
     return false;
   }
@@ -27,37 +28,63 @@ function normalizeLinkedInUrl(url) {
   }
 }
 
+function extractJson(text) {
+  if (!text || typeof text !== "string") return null;
+
+  let cleaned = text.trim()
+    .replace(/^```json\s*/i, "")
+    .replace(/^```\s*/i, "")
+    .replace(/```$/i, "")
+    .trim();
+
+  try {
+    return JSON.parse(cleaned);
+  } catch {}
+
+  const first = cleaned.indexOf("{");
+  const last = cleaned.lastIndexOf("}");
+  if (first !== -1 && last !== -1 && last > first) {
+    try {
+      return JSON.parse(cleaned.slice(first, last + 1));
+    } catch {}
+  }
+
+  return null;
+}
+
 function buildPrompt({ name, linkedinUrl }) {
   return `
 You are a personal brand strategist, reputation researcher, audience perception analyst, and visual brand audit designer.
 
-CRITICAL INPUT BINDING:
-Analyze ONLY the person represented by this exact input:
+Analyze ONLY the person represented by this exact user input:
 Name: ${name}
 LinkedIn URL: ${linkedinUrl}
 
-Do not default to any example person. Do not reuse sample data. Do not assume "Shlomi Ron" or any prior profile unless the user entered that exact name and LinkedIn URL.
-If the LinkedIn URL and public sources do not clearly match the entered name, say so clearly and lower the confidence score.
-If multiple people share the same or similar name, explain which identity you analyzed and why.
-If the LinkedIn page is not publicly readable, use the URL as the primary identity anchor and cross-reference public websites, bios, company pages, newsletters, podcasts, speaking pages, social profiles, search results, and other public sources that connect back to the same person.
-Use public web research. Cite sources in a concise source list. Do not fabricate sources, testimonials, companies, roles, awards, or case studies.
-If evidence is missing, write "Evidence not found in public signals" instead of guessing.
+Critical rules:
+- This app is for any public person/profile. Do not use any sample profile.
+- Do not reuse prior results.
+- Do not assume any identity that is not supported by the exact entered name and LinkedIn URL.
+- First verify whether the entered name and LinkedIn URL appear to refer to the same person.
+- If the LinkedIn page is not publicly readable, use the LinkedIn URL as the identity anchor and cross-reference public websites, bios, company pages, newsletters, podcasts, speaking pages, social profiles, and search results that clearly connect to the same person.
+- If identity confidence is weak, say so clearly and lower the confidence score.
+- If evidence is missing, write "Evidence not found in public signals."
+- Do not fabricate roles, clients, testimonials, credentials, case studies, awards, or sources.
+- Do not include or require a headshot, generated face, avatar, or photo placeholder.
 
-OUTPUT FORMAT:
-Return ONLY valid JSON. No markdown outside JSON.
+Return ONLY one valid JSON object. Do not wrap it in markdown. Do not include prose before or after the JSON.
 
-JSON schema:
+Required JSON schema:
 {
   "input": {
-    "name": "exact user-entered name",
-    "linkedinUrl": "normalized user-entered linkedin url"
+    "name": "exact entered name",
+    "linkedinUrl": "exact entered LinkedIn URL"
   },
   "identityVerification": {
     "status": "Verified | Partially verified | Not verified",
-    "confidence": 0-100,
+    "confidence": 0,
     "summary": "short explanation",
     "limitations": ["short limitation"],
-    "sourceNotes": ["source note with URL/domain when available"]
+    "sourceNotes": ["source note with URL or domain when available"]
   },
   "summary": {
     "currentPersonalBrand": "one sentence",
@@ -67,11 +94,11 @@ JSON schema:
     "idealFunction": "one sentence"
   },
   "metrics": [
-    {"label":"Positioning Clarity","score":0-10,"interpretation":"short"},
-    {"label":"Visual Consistency","score":0-10,"interpretation":"short"},
-    {"label":"Proof Strength","score":0-10,"interpretation":"short"},
-    {"label":"Differentiation","score":0-10,"interpretation":"short"},
-    {"label":"Form–Function Alignment","score":0-10,"interpretation":"short"}
+    {"label":"Positioning Clarity","score":0,"interpretation":"short"},
+    {"label":"Visual Consistency","score":0,"interpretation":"short"},
+    {"label":"Proof Strength","score":0,"interpretation":"short"},
+    {"label":"Differentiation","score":0,"interpretation":"short"},
+    {"label":"Form–Function Alignment","score":0,"interpretation":"short"}
   ],
   "firstImpressionAudit": {
     "whatTheyDo":"short",
@@ -100,7 +127,7 @@ JSON schema:
   },
   "formAnalysis": {
     "currentVisualIdentity":"short",
-    "aestheticTags":["premium/accessibile/etc"],
+    "aestheticTags":["short"],
     "consistency":"short",
     "matchToFunction":"short",
     "trustEffect":"short",
@@ -136,7 +163,7 @@ JSON schema:
     "threats":["short"]
   },
   "keyGaps": [
-    {"label":"short","score":0-10,"severity":"High | Medium | Low"}
+    {"label":"short","score":0,"severity":"High | Medium | Low"}
   ],
   "priorityActions": [
     {"action":"short","supportingPhrase":"short"}
@@ -146,11 +173,11 @@ JSON schema:
   ]
 }
 
-Dashboard rules:
-- All fields must be based on the exact input name and LinkedIn URL.
-- Metrics must be dynamic and evidence-sensitive.
-- Never use a headshot, face, or avatar.
-- Do not fabricate certainty. If source evidence is weak, reduce confidence and say so.
+Data rules:
+- Scores must be numbers from 0 to 10.
+- identityVerification.confidence must be a number from 0 to 100.
+- Keep all fields concise and evidence-sensitive.
+- Include sources that support the identity and major claims.
 `.trim();
 }
 
@@ -188,7 +215,6 @@ export default async function handler(req, res) {
         model,
         input: buildPrompt({ name, linkedinUrl }),
         tools: [{ type: "web_search" }],
-        text: { format: { type: "json_object" } },
         temperature: 0.2
       })
     });
@@ -213,17 +239,15 @@ export default async function handler(req, res) {
       return res.status(502).json({ error: "No analysis text returned. Please try again." });
     }
 
-    let report;
-    try {
-      report = JSON.parse(outputText);
-    } catch (parseError) {
+    const report = extractJson(outputText);
+
+    if (!report) {
       return res.status(502).json({
-        error: "The analysis returned invalid JSON. Please try again.",
+        error: "The analysis did not return valid JSON. Please try again.",
         raw: outputText.slice(0, 1500)
       });
     }
 
-    // Hard bind the user's exact input back into response to prevent drift.
     report.input = { name, linkedinUrl };
 
     return res.status(200).json({ report });
