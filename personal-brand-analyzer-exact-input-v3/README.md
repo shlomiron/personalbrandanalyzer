@@ -1,20 +1,22 @@
-# Personal Brand Analyzer v6 — Any Public Profile
+# Personal Brand Analyzer v7 — Partial Verification Fix
 
-This version removes visible sample-person placeholders and fixes the OpenAI web search + JSON mode error.
+This version fixes the issue where the app could stop with:
+"Unable to verify the identity..."
 
-## Fixes
+## What changed
 
-- No visible sample person's name in the full-name field.
-- Full-name field placeholder is now: Enter full name.
-- Browser autocomplete is turned off for the form.
-- Backend no longer uses JSON mode.
-- Backend still uses web search.
-- Footer shows: v6 no JSON mode · any profile.
-- App is intended for any public person/profile with a name and LinkedIn URL.
+- LinkedIn being blocked or not indexed no longer causes a hard failure.
+- If verification is weak, the app returns a cautious "Partially verified" or "Not verified" report.
+- The analysis continues using available public signals.
+- Unsupported claims are marked as "Evidence not found in public signals."
+- Uses a safer two-step backend:
+  1. Web research without JSON mode.
+  2. JSON conversion without web search.
+- Footer shows: v7 partial verification · any profile.
 
-## Vercel
+## Deploy
 
-Keep the same project and same URL. Upload/commit these files to the connected GitHub repo, wait for Vercel to auto-deploy, then hard refresh.
+Upload/commit these files to the connected GitHub repo, wait for Vercel to auto-deploy, then hard refresh.
 
 Environment variable required:
 OPENAI_API_KEY

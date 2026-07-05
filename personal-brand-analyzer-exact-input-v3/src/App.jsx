@@ -211,8 +211,8 @@ function App() {
           </div>
           <div className="eyebrow">✦ Any Public Profile</div>
           <h1>See how any online personal brand is currently perceived.</h1>
-          <p className="sub">Enter any person’s name and LinkedIn URL. The app analyzes that exact input, verifies identity against public signals, and displays results inside the page.</p>
-          <div className="trust"><span>🔎 Public research</span><span>📊 Dynamic scores</span><span>🧭 SWOT dashboard</span><span>🎯 Source-aware limitations</span></div>
+          <p className="sub">Enter any person’s name and LinkedIn URL. If public verification is limited, the app still returns a cautious partial report instead of stopping.</p>
+          <div className="trust"><span>🔎 Public research</span><span>📊 Dynamic scores</span><span>🧭 SWOT dashboard</span><span>🎯 Partial confidence report</span></div>
         </div>
 
         <form className="card form" onSubmit={handleSubmit} autoComplete="off">
@@ -230,7 +230,7 @@ function App() {
       <footer>
         <div><b>Powered by Visual Storytelling Institute</b><a href="https://www.visualstorytell.com" target="_blank" rel="noreferrer">visualstorytell.com</a></div>
         <div><span>For more, subscribe to the Visual Storytelling Newsletter:</span><a href="https://newsletter.visualstorytell.com" target="_blank" rel="noreferrer">newsletter.visualstorytell.com</a></div>
-        <div className="version">v6 no JSON mode · any profile</div>
+        <div className="version">v7 partial verification · any profile</div>
       </footer>
     </main>
   );
