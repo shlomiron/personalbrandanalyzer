@@ -1,24 +1,25 @@
-# Personal Brand Analyzer v9 — Strategic Public Ecosystem
+# Personal Brand Analyzer v11 — Same-Person Strategy Filter
 
-This version fixes the overly cautious LinkedIn behavior.
+This version focuses on matching the quality of a standard ChatGPT personal brand analysis while preventing unrelated same-name contamination.
 
-## What changed
+## Fixes
 
-- The app does not stop or weaken the report just because the full LinkedIn profile is not directly readable.
-- It treats the LinkedIn URL as the identity anchor, then analyzes the broader public brand ecosystem connected to that profile.
-- It separates identity confidence from analysis confidence.
-- It searches for public ecosystem signals such as websites, company bios, newsletters, podcasts, articles, speaking pages, university pages, founder pages, and social profiles.
-- It keeps v8 identity fields: company, title, location, and pasted LinkedIn headline/About/Experience.
-- It keeps anti-hallucination protection: no XYZ Corporation / ABC Company / Example Company placeholders.
-- Unsupported facts show as: Evidence not found in public signals.
-- Footer shows: v9 strategic public ecosystem · any profile.
+1. Same-name people are excluded.
+   - The LinkedIn URL and profile slug are the primary identity anchors.
+   - Sources must connect to the submitted profile through anchors such as LinkedIn slug, company, title, location, pasted LinkedIn text, website, newsletter, podcast, book, company page, or social handle.
+   - Sources about unrelated people with the same name are classified as EXCLUDE and should not appear in the report.
 
-## Deploy
+2. Output target is more strategic.
+   - The app is prompted to match the level of a normal ChatGPT request:
+     "run personal brand analysis on [name] [LinkedIn URL]. Run current status and SWOT analysis."
+   - It should produce current positioning, brand themes, archetype, scorecard, SWOT, opportunities, threats, and strategic recommendation.
 
-Upload/commit these files to the connected GitHub repo, wait for Vercel to auto-deploy, then hard refresh.
+3. Confidence is separated from analysis quality.
+   - Identity confidence: is this the right person?
+   - Analysis confidence: how much same-person public ecosystem evidence supports the report?
 
-Environment variable required:
-OPENAI_API_KEY
+4. Error handling is preserved.
+   - Plain-text Vercel/OpenAI errors should show as readable messages instead of JSON parse crashes.
 
-Optional:
-OPENAI_MODEL=gpt-4.1-mini
+Footer shows:
+v11 same-person strategy filter

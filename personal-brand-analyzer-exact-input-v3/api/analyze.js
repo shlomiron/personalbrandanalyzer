@@ -126,15 +126,33 @@ Important context:
 - Separate identity confidence from analysis confidence:
   - Identity confidence: how sure we are this is the right person.
   - Analysis confidence: how much public ecosystem evidence supports the brand analysis.
+- Do not cap identity confidence at 60% merely because LinkedIn is not directly readable.
+- If the user provides LinkedIn URL + company + title + location, and public search finds no contradiction, identity should usually be "Partially verified" at 70-85% even if LinkedIn itself is not fully readable.
+- If public ecosystem signals also connect the same name to the same company/title/location or distinctive profile slug, identity should usually be "Verified" at 85-95%.
+- Only keep identity confidence near 60% when SAME_PERSON evidence is thin, ambiguous, or there are multiple plausible people with no clear differentiator after applying the exclusion rules.
+- If public evidence conflicts with the user-provided company/title/location, lower confidence and explain the conflict.
 - The report should be strategic and insight-rich when multiple public signals are consistent, even if full LinkedIn access is limited.
 
 Identity matching rules:
-- Use name + LinkedIn slug + optional company/title/location + pasted LinkedIn text to avoid wrong-person analysis.
-- For common names, require at least one extra matching signal beyond name alone.
-- If multiple people match, prioritize sources that connect to the LinkedIn slug, exact profile URL snippets, same company/title/location, same websites, same social handle, or distinctive phrasing.
-- If identifiers are insufficient, mark identity as "Partially verified" or "Not verified" and keep factual claims cautious.
-- Still provide a useful brand analysis based on verified or likely-matching public ecosystem signals.
-- If a fact is not verified, write: "Evidence not found in public signals."
+- The LinkedIn URL and profile slug are the primary identity anchors.
+- Do not use sources about another person who only shares the same name.
+- Before using any source, classify it as SAME_PERSON, POSSIBLE_MATCH, or EXCLUDE.
+- SAME_PERSON requires at least two matching anchors, such as:
+  1. exact LinkedIn URL or profile slug
+  2. same company
+  3. same title or role category
+  4. same location
+  5. same personal/company website connected to the profile
+  6. same newsletter/podcast/book/social handle
+  7. distinctive phrase also found in user-provided LinkedIn text
+- POSSIBLE_MATCH may be used only for cautious high-level themes, not factual claims.
+- EXCLUDE all sources about people with the same name but different company, industry, location, title, or profile slug.
+- If same-name people appear in search results, mention that unrelated same-name results were excluded.
+- Never cite or base analysis on unrelated same-name sources.
+- If a source cannot be connected to the submitted LinkedIn URL, slug, company, title, location, or pasted LinkedIn text, exclude it.
+- For common names, require at least one strong anchor besides the name.
+- If exact LinkedIn access is limited but the broader ecosystem consistently matches the URL/slug/company/title/location, proceed with a strategic report.
+- If public ecosystem evidence is strong, do not let lack of direct LinkedIn access flatten the analysis.
 
 Research strategy:
 1. Search the exact LinkedIn URL and profile slug.
@@ -157,6 +175,13 @@ Research strategy:
    - conference pages
    - social profiles
 7. Look for repeated themes across sources.
+
+Strategic output target:
+- Match the quality of a standard ChatGPT strategy response to: "run personal brand analysis on [name] [LinkedIn URL]. Run current status and SWOT analysis."
+- The output should include executive-level synthesis, current positioning, brand themes, archetype, scorecard-style metrics, SWOT, threats/opportunities, and strategic recommendation.
+- Prioritize insight density over defensive disclaimers.
+- Keep confidence notes, but do not let them dominate the report.
+- Use the broader public ecosystem only when sources pass the SAME_PERSON filter.
 
 Analysis style:
 - Produce strategy-level insights, not just verification notes.
@@ -192,14 +217,28 @@ Do not include markdown. Do not include prose outside JSON.
 Use only the evidence in the research notes and the exact user input.
 This is a Personal Brand Analyzer, not only an identity checker. If LinkedIn cannot be fully accessed, still produce a strategic brand analysis using the broader public ecosystem connected to the profile. Separate identity limitations from brand strategy. If public signals are consistent, make the report insight-rich while keeping factual claims honest.
 If identity verification is weak, use "Partially verified" or "Not verified", lower confidence, and explain the limitation.
+Do not cap identity confidence at 60% solely because LinkedIn is not fully readable. If the LinkedIn URL, name, company, title, and location are provided and there is no conflicting evidence, use a higher partial verification confidence, typically 70-85%. If public ecosystem sources connect those same identifiers, use Verified at 85-95%.
 Do not output a hard failure message unless the LinkedIn URL is invalid or clearly mismatched.
 If public evidence is limited, still return all schema fields with "Evidence not found in public signals" where appropriate.
+
+Same-person source rules:
+- Do not include sources or facts about unrelated people with the same name.
+- A source is usable only if it connects to the submitted LinkedIn URL, profile slug, company, title, location, pasted LinkedIn text, personal website, company page, newsletter, podcast, book, or other matching identity anchor.
+- If the research notes mention unrelated same-name profiles, exclude them from sources and facts.
+- In identityVerification.limitations, briefly say "Unrelated same-name results were excluded" when applicable.
+- Do not use POSSIBLE_MATCH sources for specific factual claims such as employer, title, degree, clients, awards, or location.
+
+Output quality target:
+- Produce a strategic analysis on the level of a standard ChatGPT personal brand/SWOT answer.
+- Include clear current positioning, brand themes, strategic interpretation, SWOT, opportunities, threats, category ownership, and practical recommendation.
+- Keep confidence labels, but do not make the report feel like a failed verification tool when SAME_PERSON signals are adequate.
 
 Hard anti-hallucination rules:
 - Do not invent company, role, title, client, award, publication, testimonial, or location.
 - Never use placeholders such as XYZ Corporation, ABC Company, Example Company, Acme, John Doe, Jane Doe, or "Senior Digital Marketing Manager at XYZ Corporation."
 - If a fact comes only from pasted LinkedIn text, say "User-provided LinkedIn text says..." rather than treating it as independently verified.
 - If multiple people match and identifiers are insufficient, state that clearly.
+- Identity confidence should reflect all user-provided identity anchors and public corroboration, not only direct LinkedIn access.
 
 Exact user input:
 Name: ${name}
@@ -228,6 +267,11 @@ Required JSON schema:
     "summary": "short explanation",
     "limitations": ["short limitation"],
     "sourceNotes": ["source note with URL/domain or user-provided LinkedIn text note"]
+  },
+  "samePersonFilter": {
+    "usedAnchors": ["LinkedIn slug, company, title, location, pasted LinkedIn text, website, or other anchors used"],
+    "excludedSameNameResults": ["brief description of unrelated same-name results excluded, or empty array"],
+    "sourceRule": "Only sources connected to the submitted profile anchors were used."
   },
   "analysisConfidence": {
     "level": "Strong | Moderate | Limited",
@@ -342,6 +386,32 @@ Requirements:
 `.trim();
 }
 
+
+function normalizeIdentityConfidence(report, { company, title, location, linkedinText }) {
+  if (!report || !report.identityVerification) return report;
+
+  const hasAnchors = !!(company && title && location);
+  const hasPastedLinkedIn = !!compactLinkedInText(linkedinText);
+  const summary = JSON.stringify(report.identityVerification).toLowerCase();
+  const hasConflict = /(conflict|mismatch|different person|does not match|contradict)/i.test(summary);
+  const multipleAmbiguous = /(multiple|ambiguous|unclear|no clear differentiator)/i.test(summary);
+  const current = Number(report.identityVerification.confidence || 0);
+
+  if (!hasConflict) {
+    if (hasPastedLinkedIn && current < 85) {
+      report.identityVerification.confidence = 85;
+      if (report.identityVerification.status !== "Verified") report.identityVerification.status = "Partially verified";
+      report.identityVerification.summary = `${report.identityVerification.summary} User-provided LinkedIn text adds a strong identity anchor, although it is not independently verified.`;
+    } else if (hasAnchors && current < 75 && !multipleAmbiguous) {
+      report.identityVerification.confidence = 75;
+      if (report.identityVerification.status === "Not verified") report.identityVerification.status = "Partially verified";
+      report.identityVerification.summary = `${report.identityVerification.summary} The provided company, title, and location add identity anchors, with no conflicting evidence detected.`;
+    }
+  }
+
+  return report;
+}
+
 function replacePlaceholders(value) {
   if (typeof value === "string") {
     const banned = /(XYZ Corporation|ABC Company|Example Company|Acme|John Doe|Jane Doe|Senior Digital Marketing Manager at XYZ Corporation)/gi;
@@ -352,6 +422,17 @@ function replacePlaceholders(value) {
     for (const key of Object.keys(value)) value[key] = replacePlaceholders(value[key]);
   }
   return value;
+}
+
+
+function sanitizeSources(report) {
+  if (!report || !Array.isArray(report.sources)) return report;
+  const bad = /(unrelated|different person|same name|not the same|excluded|mismatch)/i;
+  report.sources = report.sources.filter(src => {
+    const text = `${src.title || ""} ${src.url || ""} ${src.supports || ""}`;
+    return !bad.test(text);
+  });
+  return report;
 }
 
 function fallbackReport({ name, linkedinUrl, company, title, location, linkedinText, researchNotes }) {
@@ -367,6 +448,11 @@ function fallbackReport({ name, linkedinUrl, company, title, location, linkedinT
         researchNotes.slice(0, 800)
       ],
       sourceNotes: []
+    },
+    samePersonFilter: {
+      usedAnchors: ["User-provided name", "LinkedIn URL", company || "Company not provided", title || "Title not provided", location || "Location not provided"].filter(Boolean),
+      excludedSameNameResults: [],
+      sourceRule: "Only sources connected to the submitted profile anchors should be used."
     },
     analysisConfidence: {
       level: "Limited",
@@ -551,7 +637,17 @@ export default async function handler(req, res) {
     }
 
     report = replacePlaceholders(report);
+    report = sanitizeSources(report);
+    report = normalizeIdentityConfidence(report, { company, title, location, linkedinText });
     report.input = { name, linkedinUrl, company, title, location, hasPastedLinkedInText: !!linkedinText };
+
+    if (!report.samePersonFilter) {
+      report.samePersonFilter = {
+        usedAnchors: ["LinkedIn URL", company, title, location].filter(Boolean),
+        excludedSameNameResults: [],
+        sourceRule: "Only sources connected to the submitted profile anchors were used."
+      };
+    }
 
     if (!report.analysisConfidence) {
       report.analysisConfidence = {
@@ -565,7 +661,8 @@ export default async function handler(req, res) {
   } catch (error) {
     return res.status(error.status || 500).json({
       error: error?.message || "Unexpected server error.",
-      details: error?.details
+      details: error?.details || null,
+      hint: "If the hosting layer returned plain text, the frontend will now show the readable message instead of a JSON parsing crash."
     });
   }
 }
