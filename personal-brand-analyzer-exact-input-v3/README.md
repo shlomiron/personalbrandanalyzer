@@ -1,20 +1,17 @@
-# Personal Brand Analyzer v8 — Stronger Identity Matching
+# Personal Brand Analyzer v9 — Strategic Public Ecosystem
 
-This version reduces wrong-person matches for common names.
+This version fixes the overly cautious LinkedIn behavior.
 
 ## What changed
 
-- Adds optional identity fields:
-  - Current company
-  - Current title
-  - Location
-  - Pasted LinkedIn headline/About/Experience
-- Treats the LinkedIn URL as the primary identity anchor.
-- Does not analyze another person with the same name unless public evidence connects that person to the URL/slug/company/title/location/pasted text.
-- Common names require stronger matching.
-- Bans placeholder outputs such as XYZ Corporation, ABC Company, Example Company, Acme, John Doe, and Jane Doe.
-- If a fact is not verified, the app says: Evidence not found in public signals.
-- Footer shows: v8 stronger identity matching · any profile.
+- The app does not stop or weaken the report just because the full LinkedIn profile is not directly readable.
+- It treats the LinkedIn URL as the identity anchor, then analyzes the broader public brand ecosystem connected to that profile.
+- It separates identity confidence from analysis confidence.
+- It searches for public ecosystem signals such as websites, company bios, newsletters, podcasts, articles, speaking pages, university pages, founder pages, and social profiles.
+- It keeps v8 identity fields: company, title, location, and pasted LinkedIn headline/About/Experience.
+- It keeps anti-hallucination protection: no XYZ Corporation / ABC Company / Example Company placeholders.
+- Unsupported facts show as: Evidence not found in public signals.
+- Footer shows: v9 strategic public ecosystem · any profile.
 
 ## Deploy
 

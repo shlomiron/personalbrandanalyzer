@@ -96,7 +96,7 @@ function getLinkedInSlug(linkedinUrl) {
 }
 
 function compactLinkedInText(text) {
-  return cleanString(text).slice(0, 5000);
+  return cleanString(text).slice(0, 7000);
 }
 
 function buildResearchPrompt({ name, linkedinUrl, company, title, location, linkedinText }) {
@@ -104,52 +104,83 @@ function buildResearchPrompt({ name, linkedinUrl, company, title, location, link
   const profileText = compactLinkedInText(linkedinText);
 
   return `
-You are a careful public-signal reputation researcher. Your top priority is avoiding wrong-person analysis.
+You are a senior personal brand strategist and careful public-signal reputation researcher.
 
-Research this user-submitted profile:
-Name entered by user: ${name}
-LinkedIn URL entered by user: ${linkedinUrl}
+Goal:
+Create a useful, strategic personal brand analysis like a strong ChatGPT session would produce, while avoiding wrong-person analysis and unsupported factual claims.
+
+Profile submitted by user:
+Name: ${name}
+LinkedIn URL: ${linkedinUrl}
 LinkedIn profile slug: ${slug}
-Optional current company entered by user: ${company || "not provided"}
-Optional current title entered by user: ${title || "not provided"}
-Optional location entered by user: ${location || "not provided"}
-Optional pasted LinkedIn headline/About/Experience text:
+Optional current company: ${company || "not provided"}
+Optional current title: ${title || "not provided"}
+Optional location: ${location || "not provided"}
+Optional pasted LinkedIn headline/About/Experience:
 ${profileText || "not provided"}
 
-Identity rules:
-- Treat the LinkedIn URL as the primary identity anchor.
-- Do not analyze a person with the same name unless public evidence connects that person to the provided LinkedIn URL, profile slug, company, title, location, or pasted LinkedIn text.
-- Common names require stronger matching. For a common name like Joe Smith, do not rely on name alone.
-- If multiple people match the name and none clearly match the URL/slug/company/title/location/pasted text, return "Not verified" and use only cautious, non-specific observations.
-- If provided company/title/location conflict with public signals, flag the conflict.
-- LinkedIn may be blocked, partially visible, or not indexed. Do not treat lack of LinkedIn access as a total failure, but lower confidence.
-- User-pasted LinkedIn text is first-party input, not independently verified public evidence. Use it for analysis but label it as user-provided.
-- Never fabricate roles, companies, clients, testimonials, awards, case studies, or sources.
-- Never use placeholder names or companies such as XYZ Corporation, ABC Company, Example Company, Acme, or "Senior Digital Marketing Manager at XYZ Corporation."
-- If a company, role, title, client, award, or source is not verified, write exactly: "Evidence not found in public signals."
-- No headshots, generated faces, avatars, or photo placeholders.
-- This app works for any public person/profile. Never use sample data or prior profile data.
+Important context:
+- You may not be able to directly read the full LinkedIn profile. LinkedIn often blocks or limits public access.
+- Do NOT stop or weaken the whole report just because LinkedIn is not directly readable.
+- Use the LinkedIn URL and slug as the identity anchor, then analyze the broader public brand ecosystem connected to the same person.
+- Separate identity confidence from analysis confidence:
+  - Identity confidence: how sure we are this is the right person.
+  - Analysis confidence: how much public ecosystem evidence supports the brand analysis.
+- The report should be strategic and insight-rich when multiple public signals are consistent, even if full LinkedIn access is limited.
 
-Search strategy:
-- Search the exact name in quotes.
-- Search the exact name plus LinkedIn slug.
-- Search the LinkedIn slug alone.
-- Search exact name plus provided company/title/location when provided.
-- Search distinctive phrases from pasted LinkedIn text when provided.
-- Look for source overlap: same name, same company, same bio, same website, same social handle, same content topics.
+Identity matching rules:
+- Use name + LinkedIn slug + optional company/title/location + pasted LinkedIn text to avoid wrong-person analysis.
+- For common names, require at least one extra matching signal beyond name alone.
+- If multiple people match, prioritize sources that connect to the LinkedIn slug, exact profile URL snippets, same company/title/location, same websites, same social handle, or distinctive phrasing.
+- If identifiers are insufficient, mark identity as "Partially verified" or "Not verified" and keep factual claims cautious.
+- Still provide a useful brand analysis based on verified or likely-matching public ecosystem signals.
+- If a fact is not verified, write: "Evidence not found in public signals."
+
+Research strategy:
+1. Search the exact LinkedIn URL and profile slug.
+2. Search exact name in quotes.
+3. Search name + profile slug.
+4. Search name + company/title/location if provided.
+5. Search distinctive phrases from pasted LinkedIn text if provided.
+6. Search for connected public ecosystem signals:
+   - personal website
+   - company bio
+   - founder page
+   - newsletter
+   - articles
+   - podcast
+   - speaking page
+   - university/teaching bio
+   - book/author page
+   - startup profile
+   - YouTube/interviews
+   - conference pages
+   - social profiles
+7. Look for repeated themes across sources.
+
+Analysis style:
+- Produce strategy-level insights, not just verification notes.
+- Identify current positioning, audience perception, strengths, weaknesses, opportunities, threats, and category ownership potential.
+- Infer strategic implications from repeated public signals, but clearly distinguish inference from verified fact.
+- If public signals consistently show a theme, you may describe it as a brand theme.
+- Do not invent exact employers, roles, awards, clients, or credentials.
+- Never use placeholders such as XYZ Corporation, ABC Company, Example Company, Acme, John Doe, or Jane Doe.
+- No headshot, fake photo, avatar, or visual-generation requirement.
 
 Return concise research notes in plain English with:
-1. Identity verification status and confidence.
-2. Direct identity matches found and missing.
-3. Whether LinkedIn was directly readable or only indirectly inferred.
+1. Identity verification status, confidence, and why.
+2. Analysis confidence and why.
+3. Whether LinkedIn was directly readable or only inferred from public/search signals.
 4. Public sources found with URLs/domains.
-5. Which details are user-provided vs independently verified.
-6. Current form signals: visual style, website/social aesthetics, tone, imagery.
-7. Current function signals: specialty, role, audience, services, content topics, proof.
-8. Evidence strength and limitations.
-9. Likely audience perception.
-10. SWOT notes.
-11. Recommended metrics and scores.
+5. Which details are user-provided vs independently visible.
+6. Current brand positioning themes.
+7. Current form signals: visual style, website/social aesthetics, tone, imagery.
+8. Current function signals: specialty, role, audience, services, content topics, proof.
+9. Brand archetype or narrative pattern if supported.
+10. Audience perception.
+11. SWOT notes.
+12. Category ownership opportunities.
+13. Recommended scores.
 `.trim();
 }
 
@@ -159,7 +190,7 @@ Convert the research notes below into ONE valid JSON object that follows the exa
 Do not include markdown. Do not include prose outside JSON.
 
 Use only the evidence in the research notes and the exact user input.
-If evidence is weak or missing, keep the analysis useful but honest.
+This is a Personal Brand Analyzer, not only an identity checker. If LinkedIn cannot be fully accessed, still produce a strategic brand analysis using the broader public ecosystem connected to the profile. Separate identity limitations from brand strategy. If public signals are consistent, make the report insight-rich while keeping factual claims honest.
 If identity verification is weak, use "Partially verified" or "Not verified", lower confidence, and explain the limitation.
 Do not output a hard failure message unless the LinkedIn URL is invalid or clearly mismatched.
 If public evidence is limited, still return all schema fields with "Evidence not found in public signals" where appropriate.
@@ -198,8 +229,13 @@ Required JSON schema:
     "limitations": ["short limitation"],
     "sourceNotes": ["source note with URL/domain or user-provided LinkedIn text note"]
   },
+  "analysisConfidence": {
+    "level": "Strong | Moderate | Limited",
+    "summary": "short explanation of how much public ecosystem evidence supports the brand analysis",
+    "basis": ["public ecosystem signal or user-provided signal"]
+  },
   "summary": {
-    "currentPersonalBrand": "one sentence",
+    "currentPersonalBrand": "strategic one sentence",
     "currentForm": "one sentence",
     "currentFunction": "one sentence",
     "idealForm": "one sentence",
@@ -224,6 +260,11 @@ Required JSON schema:
   "brandAttributes": [
     {"attribute":"short","evidence":"specific public signal, user-provided signal, or limitation","signalType":"Form | Function | Both","strength":"Strong | Moderate | Weak","perception":"short"}
   ],
+  "brandArchetype": {
+    "primary":"short or Evidence not found in public signals.",
+    "secondary":"short or Evidence not found in public signals.",
+    "rationale":"short"
+  },
   "functionAnalysis": {
     "apparentSpecialty":"short",
     "associatedSkills":["short"],
@@ -257,6 +298,12 @@ Required JSON schema:
     "formConsistency":"short",
     "functionConsistency":"short",
     "formFunctionAlignment":"short"
+  },
+  "categoryOpportunity": {
+    "currentPerception":"short",
+    "strongerPerception":"short",
+    "ownableCategory":"short",
+    "positioningLine":"short"
   },
   "reputationGapTable": [
     {"idealPerception":"short","currentPerception":"short","gap":"short","recommendedAction":"short"}
@@ -321,6 +368,11 @@ function fallbackReport({ name, linkedinUrl, company, title, location, linkedinT
       ],
       sourceNotes: []
     },
+    analysisConfidence: {
+      level: "Limited",
+      summary: "Analysis confidence is limited because matching public ecosystem signals were sparse or the structured conversion failed.",
+      basis: [researchNotes.slice(0, 700)]
+    },
     summary: {
       currentPersonalBrand: "Not enough public evidence was found to summarize confidently.",
       currentForm: "Evidence not found in public signals.",
@@ -353,6 +405,11 @@ function fallbackReport({ name, linkedinUrl, company, title, location, linkedinT
         perception: "A stranger may struggle to verify this profile quickly."
       }
     ],
+    brandArchetype: {
+      primary: "Evidence not found in public signals.",
+      secondary: "Evidence not found in public signals.",
+      rationale: "Not enough reliable public evidence."
+    },
     functionAnalysis: {
       apparentSpecialty: "Evidence not found in public signals.",
       associatedSkills: ["Evidence not found in public signals."],
@@ -386,6 +443,12 @@ function fallbackReport({ name, linkedinUrl, company, title, location, linkedinT
       formConsistency: "Cannot assess.",
       functionConsistency: "Cannot assess.",
       formFunctionAlignment: "Cannot assess."
+    },
+    categoryOpportunity: {
+      currentPerception: "Evidence not found in public signals.",
+      strongerPerception: "Evidence not found in public signals.",
+      ownableCategory: "Evidence not found in public signals.",
+      positioningLine: "Evidence not found in public signals."
     },
     reputationGapTable: [
       {
@@ -460,7 +523,7 @@ export default async function handler(req, res) {
         model,
         input: buildResearchPrompt({ name, linkedinUrl, company, title, location, linkedinText }),
         tools: [{ type: "web_search" }],
-        temperature: 0.2
+        temperature: 0.25
       }
     });
 
@@ -489,6 +552,14 @@ export default async function handler(req, res) {
 
     report = replacePlaceholders(report);
     report.input = { name, linkedinUrl, company, title, location, hasPastedLinkedInText: !!linkedinText };
+
+    if (!report.analysisConfidence) {
+      report.analysisConfidence = {
+        level: report.identityVerification?.status === "Verified" ? "Moderate" : "Limited",
+        summary: "Analysis confidence was estimated from available public ecosystem signals.",
+        basis: report.identityVerification?.sourceNotes || []
+      };
+    }
 
     return res.status(200).json({ report });
   } catch (error) {

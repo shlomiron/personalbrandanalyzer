@@ -224,8 +224,8 @@ function App() {
           </div>
           <div className="eyebrow">✦ Any Public Profile</div>
           <h1>See how any online personal brand is currently perceived.</h1>
-          <p className="sub">Enter any person’s name and LinkedIn URL. For common names, add company, title, location, or pasted LinkedIn text to reduce wrong-person matches.</p>
-          <div className="trust"><span>🔎 Public research</span><span>📊 Dynamic scores</span><span>🧭 SWOT dashboard</span><span>🪪 Identity anchors</span></div>
+          <p className="sub">Enter any person’s name and LinkedIn URL. Uses the LinkedIn URL as the identity anchor, then analyzes the broader public brand ecosystem connected to that profile.</p>
+          <div className="trust"><span>🔎 Public research</span><span>📊 Dynamic scores</span><span>🧭 SWOT dashboard</span><span>🌐 Public ecosystem analysis</span></div>
         </div>
 
         <form className="card form" onSubmit={handleSubmit} autoComplete="off">
@@ -240,7 +240,7 @@ function App() {
           <label><span>Location</span><input value={location} onChange={e => setLocation(e.target.value)} placeholder="City, state/country" autoComplete="off" name="person_location" /></label>
           <label><span>Optional: paste LinkedIn headline / About / Experience</span><textarea value={linkedinText} onChange={e => setLinkedinText(e.target.value)} placeholder="Paste public/profile text here to improve accuracy when LinkedIn cannot be read directly." autoComplete="off" name="person_linkedin_text" rows="5" /></label>
           <button disabled={!canSubmit || loading}>{loading ? "Analyzing public signals..." : "Analyze My Brand →"}</button>
-          <p className="hint">The LinkedIn URL is the identity anchor. Extra fields help avoid analyzing the wrong person when names are common.</p>
+          <p className="hint">LinkedIn may not be fully readable. The app uses broader public signals plus optional pasted LinkedIn text for higher accuracy.</p>
           {error && <div className="error">{error}</div>}
         </form>
       </section>
@@ -250,7 +250,7 @@ function App() {
       <footer>
         <div><b>Powered by Visual Storytelling Institute</b><a href="https://www.visualstorytell.com" target="_blank" rel="noreferrer">visualstorytell.com</a></div>
         <div><span>For more, subscribe to the Visual Storytelling Newsletter:</span><a href="https://newsletter.visualstorytell.com" target="_blank" rel="noreferrer">newsletter.visualstorytell.com</a></div>
-        <div className="version">v8 stronger identity matching · any profile</div>
+        <div className="version">v9 strategic public ecosystem · any profile</div>
       </footer>
     </main>
   );
