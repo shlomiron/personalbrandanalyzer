@@ -1,25 +1,24 @@
-# Personal Brand Analyzer v11 — Same-Person Strategy Filter
+# Personal Brand Analyzer v12 — Strategic Inference, Fewer Caveats
 
-This version focuses on matching the quality of a standard ChatGPT personal brand analysis while preventing unrelated same-name contamination.
+This version fixes the issue where the app verifies the right person but fills many fields with:
+"Not assessable due to limited public information."
 
-## Fixes
+## What changed
 
-1. Same-name people are excluded.
-   - The LinkedIn URL and profile slug are the primary identity anchors.
-   - Sources must connect to the submitted profile through anchors such as LinkedIn slug, company, title, location, pasted LinkedIn text, website, newsletter, podcast, book, company page, or social handle.
-   - Sources about unrelated people with the same name are classified as EXCLUDE and should not appear in the report.
+- Direct LinkedIn access limitations are treated as a caveat, not the whole report.
+- If identity confidence is 75%+ and same-person public signals exist, the app must produce a substantive strategic analysis.
+- The app can infer strategic themes from repeated same-person public signals.
+- It still does not invent factual claims such as employers, awards, clients, credentials, or exact titles.
+- Factual claims require evidence; strategic interpretation can use patterns.
+- SWOT, brand archetype, category opportunity, positioning, and priority actions should now be richer and closer to a normal ChatGPT personal brand analysis.
 
-2. Output target is more strategic.
-   - The app is prompted to match the level of a normal ChatGPT request:
-     "run personal brand analysis on [name] [LinkedIn URL]. Run current status and SWOT analysis."
-   - It should produce current positioning, brand themes, archetype, scorecard, SWOT, opportunities, threats, and strategic recommendation.
+## Preserved from v11
 
-3. Confidence is separated from analysis quality.
-   - Identity confidence: is this the right person?
-   - Analysis confidence: how much same-person public ecosystem evidence supports the report?
-
-4. Error handling is preserved.
-   - Plain-text Vercel/OpenAI errors should show as readable messages instead of JSON parse crashes.
+- Excludes unrelated same-name people.
+- Uses LinkedIn URL and slug as primary identity anchors.
+- Keeps company/title/location/pasted LinkedIn text fields.
+- Keeps readable error handling.
+- Blocks placeholders like XYZ Corporation and ABC Company.
 
 Footer shows:
-v11 same-person strategy filter
+v12 strategic inference · fewer caveats

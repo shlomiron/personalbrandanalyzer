@@ -234,7 +234,7 @@ function App() {
           </div>
           <div className="eyebrow">✦ Any Public Profile</div>
           <h1>See how any online personal brand is currently perceived.</h1>
-          <p className="sub">Enter any person’s name and LinkedIn URL. Uses the LinkedIn URL as the identity anchor, excludes unrelated same-name people, then analyzes the verified public brand ecosystem.</p>
+          <p className="sub">Enter any person’s name and LinkedIn URL. Uses the LinkedIn URL as the identity anchor, excludes unrelated same-name people, then turns verified public themes into a richer strategic brand analysis.</p>
           <div className="trust"><span>🔎 Public research</span><span>📊 Dynamic scores</span><span>🧭 SWOT dashboard</span><span>🌐 Public ecosystem analysis</span></div>
         </div>
 
@@ -250,7 +250,7 @@ function App() {
           <label><span>Location</span><input value={location} onChange={e => setLocation(e.target.value)} placeholder="City, state/country" autoComplete="off" name="person_location" /></label>
           <label><span>Optional: paste LinkedIn headline / About / Experience</span><textarea value={linkedinText} onChange={e => setLinkedinText(e.target.value)} placeholder="Paste public/profile text here to improve accuracy when LinkedIn cannot be read directly." autoComplete="off" name="person_linkedin_text" rows="5" /></label>
           <button disabled={!canSubmit || loading}>{loading ? "Analyzing public signals..." : "Analyze My Brand →"}</button>
-          <p className="hint">For best results, add company, title, location, and pasted LinkedIn text. The app now filters out unrelated same-name people and shows readable server errors.</p>
+          <p className="hint">The app now treats limited LinkedIn access as a caveat, not a reason to fill the report with non-assessable sections.</p>
           {error && <div className="error">{error}</div>}
         </form>
       </section>
@@ -260,7 +260,7 @@ function App() {
       <footer>
         <div><b>Powered by Visual Storytelling Institute</b><a href="https://www.visualstorytell.com" target="_blank" rel="noreferrer">visualstorytell.com</a></div>
         <div><span>For more, subscribe to the Visual Storytelling Newsletter:</span><a href="https://newsletter.visualstorytell.com" target="_blank" rel="noreferrer">newsletter.visualstorytell.com</a></div>
-        <div className="version">v11 same-person strategy filter</div>
+        <div className="version">v12 strategic inference · fewer caveats</div>
       </footer>
     </main>
   );
