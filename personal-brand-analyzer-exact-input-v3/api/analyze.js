@@ -96,7 +96,7 @@ function getLinkedInSlug(linkedinUrl) {
 }
 
 function compactLinkedInText(text) {
-  return cleanString(text).slice(0, 7000);
+  return cleanString(text).slice(0, 3500);
 }
 
 function buildResearchPrompt({ name, linkedinUrl, company, title, location, linkedinText }) {
@@ -154,6 +154,16 @@ Identity matching rules:
 - If exact LinkedIn access is limited but the broader ecosystem consistently matches the URL/slug/company/title/location, proceed with a strategic report.
 - If public ecosystem evidence is strong, do not let lack of direct LinkedIn access flatten the analysis.
 
+LinkedIn pasted text handling:
+- Treat pasted LinkedIn text as an identity anchor and factual grounding source, not as the whole analysis.
+- Do not let pasted text reduce the quality, breadth, or strategic depth of the report.
+- Use pasted text to confirm title, company, specialty, themes, phrasing, and proof points.
+- Still search and analyze the broader public brand ecosystem.
+- If pasted text is generic or self-promotional, translate it into strategic implications rather than repeating it.
+- Do not overfit to pasted text at the expense of public ecosystem signals.
+- If pasted text conflicts with public sources, explain the conflict.
+- If pasted text is long, extract only the strongest 5-8 identity/positioning/proof signals.
+
 Research strategy:
 1. Search the exact LinkedIn URL and profile slug.
 2. Search exact name in quotes.
@@ -205,6 +215,16 @@ Analysis style:
 - Never use placeholders such as XYZ Corporation, ABC Company, Example Company, Acme, John Doe, or Jane Doe.
 - No headshot, fake photo, avatar, or visual-generation requirement.
 
+Before writing the final research notes, internally extract from pasted LinkedIn text only:
+- current headline/title/company if present
+- primary positioning themes
+- target audience
+- strongest proof points
+- distinctive phrases
+- exclusions or uncertainty
+
+Then blend those extracted signals with broader public ecosystem signals.
+
 Return concise research notes in plain English with:
 1. Identity verification status, confidence, and why.
 2. Analysis confidence and why.
@@ -233,6 +253,15 @@ If identity verification is weak, use "Partially verified" or "Not verified", lo
 Do not cap identity confidence at 60% solely because LinkedIn is not fully readable. If the LinkedIn URL, name, company, title, and location are provided and there is no conflicting evidence, use a higher partial verification confidence, typically 70-85%. If public ecosystem sources connect those same identifiers, use Verified at 85-95%.
 Do not output a hard failure message unless the LinkedIn URL is invalid or clearly mismatched.
 If public evidence is limited, still return all schema fields. Use "Evidence not found in public signals" only for specific factual claims that are not supported. For strategic interpretation fields, provide a cautious but useful assessment from the available same-person signals.
+
+Pasted LinkedIn text balancing rules:
+- Pasted LinkedIn text should improve accuracy, not make the report narrower.
+- Use it for facts, identity confirmation, and language cues.
+- Do not summarize the pasted About section as the main output.
+- Do not repeat generic self-description.
+- Always combine it with public ecosystem analysis where available.
+- Strategic sections must still include interpretation, SWOT, category opportunity, positioning, and recommendations.
+- If pasted text is the only strong source, still produce a strategic but clearly user-provided-text-grounded report.
 
 Same-person source rules:
 - Do not include sources or facts about unrelated people with the same name.
@@ -392,6 +421,7 @@ Required JSON schema:
 }
 
 Completeness requirements:
+- Do not produce a report that is mostly a paraphrase of the pasted LinkedIn About section.
 - Major strategic sections should be substantive, not mostly "not assessable."
 - SWOT must contain specific strategic points based on public themes.
 - Current positioning, brand archetype, category opportunity, and priority actions must contain useful analysis if analysisConfidence is Moderate or Strong.

@@ -234,7 +234,7 @@ function App() {
           </div>
           <div className="eyebrow">✦ Any Public Profile</div>
           <h1>See how any online personal brand is currently perceived.</h1>
-          <p className="sub">Enter any person’s name and LinkedIn URL. Uses the LinkedIn URL as the identity anchor, excludes unrelated same-name people, then turns verified public themes into a richer strategic brand analysis.</p>
+          <p className="sub">Enter any person’s name and LinkedIn URL. Uses LinkedIn text as a grounding signal, but keeps the report focused on broader strategic brand analysis.</p>
           <div className="trust"><span>🔎 Public research</span><span>📊 Dynamic scores</span><span>🧭 SWOT dashboard</span><span>🌐 Public ecosystem analysis</span></div>
         </div>
 
@@ -248,9 +248,9 @@ function App() {
             <label><span>Current title</span><input value={title} onChange={e => setTitle(e.target.value)} placeholder="Job title" autoComplete="off" name="person_title" /></label>
           </div>
           <label><span>Location</span><input value={location} onChange={e => setLocation(e.target.value)} placeholder="City, state/country" autoComplete="off" name="person_location" /></label>
-          <label><span>Optional: paste LinkedIn headline / About / Experience</span><textarea value={linkedinText} onChange={e => setLinkedinText(e.target.value)} placeholder="Paste public/profile text here to improve accuracy when LinkedIn cannot be read directly." autoComplete="off" name="person_linkedin_text" rows="5" /></label>
+          <label><span>Optional: paste LinkedIn headline/About — for grounding, not required</span><textarea value={linkedinText} onChange={e => setLinkedinText(e.target.value)} placeholder="Paste the most relevant headline/About text. Shorter is better; this grounds facts without narrowing the strategy." autoComplete="off" name="person_linkedin_text" rows="5" /></label>
           <button disabled={!canSubmit || loading}>{loading ? "Analyzing public signals..." : "Analyze My Brand →"}</button>
-          <p className="hint">The app now treats limited LinkedIn access as a caveat, not a reason to fill the report with non-assessable sections.</p>
+          <p className="hint">Pasted LinkedIn text improves accuracy, but the app should not simply summarize it or make the report narrower.</p>
           {error && <div className="error">{error}</div>}
         </form>
       </section>
@@ -260,7 +260,7 @@ function App() {
       <footer>
         <div><b>Powered by Visual Storytelling Institute</b><a href="https://www.visualstorytell.com" target="_blank" rel="noreferrer">visualstorytell.com</a></div>
         <div><span>For more, subscribe to the Visual Storytelling Newsletter:</span><a href="https://newsletter.visualstorytell.com" target="_blank" rel="noreferrer">newsletter.visualstorytell.com</a></div>
-        <div className="version">v12 strategic inference · fewer caveats</div>
+        <div className="version">v13 balanced LinkedIn text</div>
       </footer>
     </main>
   );

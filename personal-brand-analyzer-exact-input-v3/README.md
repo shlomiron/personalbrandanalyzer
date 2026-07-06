@@ -1,24 +1,31 @@
-# Personal Brand Analyzer v12 — Strategic Inference, Fewer Caveats
+# Personal Brand Analyzer v13 — Balanced LinkedIn Text
 
-This version fixes the issue where the app verifies the right person but fills many fields with:
-"Not assessable due to limited public information."
+This version fixes the issue where adding the full LinkedIn About section can make the output poorer than using only name + LinkedIn + company + title.
 
 ## What changed
 
-- Direct LinkedIn access limitations are treated as a caveat, not the whole report.
-- If identity confidence is 75%+ and same-person public signals exist, the app must produce a substantive strategic analysis.
-- The app can infer strategic themes from repeated same-person public signals.
-- It still does not invent factual claims such as employers, awards, clients, credentials, or exact titles.
-- Factual claims require evidence; strategic interpretation can use patterns.
-- SWOT, brand archetype, category opportunity, positioning, and priority actions should now be richer and closer to a normal ChatGPT personal brand analysis.
+- Pasted LinkedIn text is now treated as:
+  - identity anchor
+  - factual grounding
+  - language/positioning cue
 
-## Preserved from v11
+- It is not treated as the whole report.
+- The app should not simply summarize or paraphrase the About section.
+- The report still searches and analyzes the broader public brand ecosystem.
+- Long pasted text is capped more tightly so it does not dominate the prompt.
+- The app extracts only the strongest signals from pasted text, then blends them with public ecosystem signals.
+- SWOT, positioning, archetype, category opportunity, and recommendations should remain strategic and rich.
 
-- Excludes unrelated same-name people.
-- Uses LinkedIn URL and slug as primary identity anchors.
-- Keeps company/title/location/pasted LinkedIn text fields.
-- Keeps readable error handling.
-- Blocks placeholders like XYZ Corporation and ABC Company.
+## Best input guidance
+
+For common names:
+- Name
+- LinkedIn URL
+- Company
+- Title
+
+For extra grounding:
+- Paste only the most relevant LinkedIn headline/About excerpt, not the entire profile if it is very long.
 
 Footer shows:
-v12 strategic inference · fewer caveats
+v13 balanced LinkedIn text
